@@ -15,9 +15,19 @@ def is_local_max(A, m, n, i, j):
             j_real = j+l
 
             if 0 <= i_real < m and 0 <= j_real < n:
-                if A[i_real][j_real] > A[i][j]:
+                if A[i_real][j_real][0] > A[i][j][0]:
                     return False
     return True
+
+def Ai_checker(Ai, x, y):
+
+    if Ai[2] > y: 
+        Ai[1] = x
+        Ai[2] = y
+    if Ai[4] < y: #Hi y
+        Ai[3] = x
+        Ai[4] = y
+    return Ai
 
 def hough_transform_lines(X, M, N, m, n, smin):
     # Input: X = (x0, . . .), a collection of 2D points; M, N, width and
@@ -29,19 +39,27 @@ def hough_transform_lines(X, M, N, m, n, smin):
     dr = numpy.sqrt(M**2+N**2)/n 
     j0 = n//2
 
-    A = numpy.zeros((m, n))
+    A = numpy.zeros((m, n, 5))
     for k in range(len(X)):
         (x,y) = (X[k][0]-xr[0], X[k][1]-xr[1])
         for i in range(m):
             theta = d_theta*i
             r = x*math.cos(theta) + y*math.sin(theta) #This can be crazy performance improved (check book)
             j = j0 + round(r/dr)
-            A[i][int(j)]+=1
+            A[i][int(j)][0]+=1
+            if A[i][int(j)][0] == 1:
+                A[i][int(j)][1] = X[k][0]
+                A[i][int(j)][2] = X[k][1] 
+                A[i][int(j)][3] = X[k][0]
+                A[i][int(j)][4] = X[k][1]
+            else: 
+                A[i][int(j)] = Ai_checker(A[i][int(j)], X[k][0], X[k][1])
+                
 
     L = []
     for i in range(len(A)):
         for j in range(len(A[i])):
-            if A[i][j] >= smin and is_local_max(A, m, n, i, j): #How to do this with current parameters
+            if A[i][j][0] >= smin and is_local_max(A, m, n, i, j): 
                 theta = d_theta*i
                 r = (j-j0)*dr
                 line = (theta, r, xr, A[i][j])
